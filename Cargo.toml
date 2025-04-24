@@ -1,5 +1,5 @@
 [package]
-name = "cartesi-coprocessoreigenlayer-query"
+name = "cartesi-coprocessor-eigenlayer"
 version = "0.1.0"
 edition = "2021"
 

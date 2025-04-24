@@ -97,9 +97,9 @@ RUN dpkg -i /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb \
 ENV PATH="/opt/cartesi/bin:/opt/cartesi/dapp:${PATH}"
 
 WORKDIR /opt/cartesi/dapp
-COPY --from=cross-build-stage /opt/cartesi/dapp/target/riscv64gc-unknown-linux-gnu/release/cartesi-coprocessoreigenlayer-query .
+COPY --from=cross-build-stage /opt/cartesi/dapp/target/riscv64gc-unknown-linux-gnu/release/cartesi-coprocessor-eigenlayer .
 
 ENV ROLLUP_HTTP_SERVER_URL="http://127.0.0.1:5004"
 
 ENTRYPOINT ["rollup-init"]
-CMD ["cartesi-coprocessoreigenlayer-query"]
+CMD ["cartesi-coprocessor-eigenlayer"]

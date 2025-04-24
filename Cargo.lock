@@ -709,6 +709,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cartesi-coprocessor-eigenlayer"
+version = "0.1.0"
+dependencies = [
+ "cartesi-coprocessor-evm",
+ "hyper",
+ "json",
+ "tokio",
+]
+
+[[package]]
 name = "cartesi-coprocessor-evm"
 version = "0.0.0"
 source = "git+https://github.com/zippiehq/cartesi-coprocessor-evm-call?branch=use-revm#4c435688df8f632da23736016409b5a47fa27631"
@@ -724,16 +734,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
-]
-
-[[package]]
-name = "cartesi-coprocessoreigenlayer-query"
-version = "0.1.0"
-dependencies = [
- "cartesi-coprocessor-evm",
- "hyper",
- "json",
- "tokio",
 ]
 
 [[package]]
