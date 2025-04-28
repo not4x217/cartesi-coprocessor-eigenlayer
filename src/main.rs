@@ -1,10 +1,13 @@
 use std::env;
 
+use cartesi_coprocessor_evm::gio_client::GIOClient;
 use json::{object, JsonValue};
+use url::Url;
 
-pub async fn query_eigenlayer_operators(server_addr: &str) {
-    
-}
+use alloy_primitives::{hex, BlockHash};
+use alloy_sol_types::{sol, SolType};
+
+mod eigenlayer;
 
 pub async fn handle_advance(
     _client: &hyper::Client<hyper::client::HttpConnector>,
@@ -25,10 +28,26 @@ pub async fn handle_inspect(
     request: JsonValue,
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received inspect request data {}", &request);
-    let _payload = request["data"]["payload"]
+    let payload = request["data"]["payload"]
         .as_str()
         .ok_or("Missing payload")?;
-    // TODO: add application logic here
+
+    let payload_data = hex::decode(payload)?;
+
+    type PayloadValues = sol! { tuple(bytes32, address, address) };
+    let payload_values = PayloadValues::abi_decode(&payload_data)?;
+
+    let gio_url = Url::parse(_server_addr)?;
+    let gio_client = GIOClient::new(gio_url);
+
+    eigenlayer::query_operator_token_balance(
+        gio_client,
+        BlockHash::from(payload_values.0),
+        payload_values.1,
+        payload_values.2,
+    )
+    .await?;
+
     Ok("accept")
 }
 

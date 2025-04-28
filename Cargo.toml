@@ -5,8 +5,16 @@ edition = "2021"
 
 [dependencies]
 
-cartesi-coprocessor-evm-call = {git = "https://github.com/zippiehq/cartesi-coprocessor-evm-call", branch = "use-revm", package = "cartesi-coprocessor-evm"}
+cartesi-coprocessor-evm = {git = "https://github.com/zippiehq/cartesi-coprocessor-evm-call", branch = "use-revm", package = "cartesi-coprocessor-evm"}
 
-json = "0.12"
-hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
+alloy-primitives = "1.0.0"
+alloy-sol-types = "1.0.0"
+alloy-dyn-abi = "1.0.0"
+alloy-contract = "0.15.6"
+
 tokio = { version = "1.44", features = ["macros", "rt-multi-thread"] }
+
+hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
+url = "2.5.4"
+json = "0.12"
+
