@@ -18,7 +18,7 @@ pub async fn query_operator_token_balance(
     let encoded = balanceOfCall::new((operator,)).abi_encode();
 
     let mut evm = EVM::new(gio_client, block_hash);
-    let resutl = evm.call(
+    let result = evm.call(
         address!("0000000000000000000000000000000000000000"),
         erc20,
         0,
@@ -26,7 +26,10 @@ pub async fn query_operator_token_balance(
         Bytes::from(encoded),
     )?;
 
-    let balance = balanceOfCall::abi_decode_returns(&resutl)
+    // !!!
+    println!("{}", result);
+
+    let balance = balanceOfCall::abi_decode_returns(&result)
         .expect("failed to decode return value of balanceOf call");
 
     Ok(balance)

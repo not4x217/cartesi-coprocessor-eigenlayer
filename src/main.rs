@@ -15,19 +15,6 @@ pub async fn handle_advance(
     request: JsonValue,
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
-    let _payload = request["data"]["payload"]
-        .as_str()
-        .ok_or("Missing payload")?;
-    // TODO: add application logic here
-    Ok("accept")
-}
-
-pub async fn handle_inspect(
-    _client: &hyper::Client<hyper::client::HttpConnector>,
-    _server_addr: &str,
-    request: JsonValue,
-) -> Result<&'static str, Box<dyn std::error::Error>> {
-    println!("Received inspect request data {}", &request);
     let payload = request["data"]["payload"]
         .as_str()
         .ok_or("Missing payload")?;
@@ -37,10 +24,20 @@ pub async fn handle_inspect(
     type PayloadValues = sol! { tuple(bytes32, address, address) };
     let payload_values = PayloadValues::abi_decode(&payload_data)?;
 
-    let gio_url = Url::parse(_server_addr)?;
+    // !!!
+    println!("block hash: {}", BlockHash::from(payload_values.0));
+    println!("operator: {}", payload_values.1);
+    println!("erc20: {}", payload_values.2);
+
+    let gio_url_base = Url::parse(_server_addr)?;
+    let gio_url = gio_url_base.join("gio")?;
+
+    // !!!
+    println!("gio url: {}", gio_url);
+
     let gio_client = GIOClient::new(gio_url);
 
-    eigenlayer::query_operator_token_balance(
+    let balance = eigenlayer::query_operator_token_balance(
         gio_client,
         BlockHash::from(payload_values.0),
         payload_values.1,
@@ -48,6 +45,22 @@ pub async fn handle_inspect(
     )
     .await?;
 
+    // !!!
+    println!("operator balance: {}", balance);
+    
+    Ok("accept")
+}
+
+pub async fn handle_inspect(
+    _client: &hyper::Client<hyper::client::HttpConnector>,
+    _server_addr: &str,
+    request: JsonValue,
+) -> Result<&'static str, Box<dyn std::error::Error>> {
+    println!("Received inspect request data {}", &request);
+    let _payload = request["data"]["payload"]
+        .as_str()
+        .ok_or("Missing payload")?;
+    // TODO: add application logic here
     Ok("accept")
 }
 
