@@ -4,14 +4,14 @@ use cartesi_coprocessor_evm::gio_client::GIOClient;
 use json::{object, JsonValue};
 use url::Url;
 
-use alloy_primitives::{hex, BlockHash};
+use alloy_primitives::{hex, U256, BlockHash, Address};
 use alloy_sol_types::{sol, SolType};
 
 mod eigenlayer;
 
 pub async fn handle_advance(
-    _client: &hyper::Client<hyper::client::HttpConnector>,
-    _server_addr: &str,
+    client: &hyper::Client<hyper::client::HttpConnector>,
+    server_addr: &str,
     request: JsonValue,
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
@@ -29,7 +29,7 @@ pub async fn handle_advance(
     println!("operator: {}", payload_values.1);
     println!("erc20: {}", payload_values.2);
 
-    let gio_url_base = Url::parse(_server_addr)?;
+    let gio_url_base = Url::parse(server_addr)?;
     let gio_url = gio_url_base.join("gio")?;
 
     // !!!
@@ -37,18 +37,57 @@ pub async fn handle_advance(
 
     let gio_client = GIOClient::new(gio_url);
 
-    let balance = eigenlayer::query_operator_token_balance(
+    let block_hash = BlockHash::from(payload_values.0);
+    let operator = payload_values.1;
+    let erc_20 = payload_values.2;  
+     
+    let operator_balance = eigenlayer::query_operator_token_balance(
         gio_client,
         BlockHash::from(payload_values.0),
-        payload_values.1,
-        payload_values.2,
-    )
-    .await?;
+        operator,
+        erc_20,
+    ).await?;
 
     // !!!
-    println!("operator balance: {}", balance);
+    println!("operator balance: {}", operator_balance);
+
+    emit_abi_encoded_notice(
+        client,
+        server_addr,
+        block_hash,
+        operator,
+        erc_20,
+        operator_balance
+    ).await?;
     
     Ok("accept")
+}
+
+async fn emit_abi_encoded_notice(
+    client: &hyper::Client<hyper::client::HttpConnector>,
+    server_addr: &str,
+    block_hash: BlockHash,
+    operator: Address,
+    erc_20: Address,
+    operator_balance: U256,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Encode payload
+    type NoticeValues = sol! { tuple(bytes32, address, address, uint256) };
+    let notice_values = (block_hash, operator, erc_20, operator_balance);
+    let notice_data = NoticeValues::abi_encode(&notice_values);
+
+    // Create and emit notice
+    let notice_hex = hex::encode_prefixed(&notice_data);
+    let notice = object! { "payload" => notice_hex };
+    let notice_request = hyper::Request::builder()
+        .method(hyper::Method::POST)
+        .uri(format!("{}/notice", server_addr))
+        .header("Content-Type", "application/json")
+        .body(hyper::Body::from(notice.dump()))?;
+
+    let _response = client.request(notice_request).await?;
+    println!("ABI encoded notice emitted successfully");
+    Ok(())
 }
 
 pub async fn handle_inspect(
